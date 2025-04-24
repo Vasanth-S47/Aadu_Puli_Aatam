@@ -1,40 +1,55 @@
 package com.game.controller;
 
-import com.game.dao.UserDAO;
-import com.game.model.User;
+import com.game.exception.EmailAlreadyExistsException;
+import com.game.exception.InvalidInputException;
+import com.game.service.UserService;
+import com.game.utils.MessageUtil;
+import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.io.PrintWriter;
 
-@WebServlet("/signup")
+@WebServlet("/auth/signup")
 public class UserRegistrationController extends HttpServlet {
+    private UserService userService;
+    private Gson gson;
+
+    public void init() throws ServletException {
+        super.init();
+        userService = userService.getInstance();
+        gson = new Gson();
+    }
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("application/json");
+        PrintWriter responseWriter = response.getWriter();
 
         String name = request.getParameter("name");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        User user = new User(name, email, password);
-        UserDAO userDAO = new UserDAO();
 
         try {
-            if (userDAO.isEmailRegistered(email)) {
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
-                return;
-            }
-
-            boolean inserted = userDAO.insertUser(user);
-            if (inserted) {
+            boolean isRegistered = userService.registerUser(name, email, password);
+            if(isRegistered)
+            {
                 response.setStatus(HttpServletResponse.SC_CREATED);
-            } else {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                responseWriter.print(gson.toJson(MessageUtil.get("message.signup.success")));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }catch (InvalidInputException | EmailAlreadyExistsException e)
+        {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            responseWriter.print(gson.toJson(e.getMessage()));
         }
+        catch (Exception e)
+        {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            responseWriter.print(gson.toJson(MessageUtil.get("error.server.internal")));
+        }
+
     }
 }

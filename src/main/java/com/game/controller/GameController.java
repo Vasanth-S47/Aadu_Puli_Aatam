@@ -32,7 +32,7 @@ import java.io.PrintWriter;
  * thread‑safe.</p>
  */
 
-@WebServlet("/api/game/*")
+@WebServlet("/api/game")
 public class GameController extends HttpServlet {
 
     private Gson gson;

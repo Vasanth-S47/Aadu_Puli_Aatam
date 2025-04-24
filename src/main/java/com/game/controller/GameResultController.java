@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/game/result/*")
+@WebServlet("/api/game/result")
 public class GameResultController extends HttpServlet {
     private GameService gameService;
     private  Gson gson = new Gson();

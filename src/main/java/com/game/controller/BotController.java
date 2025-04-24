@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 
-@WebServlet("/api/bot/*")
+@WebServlet("/api/bot")
 public class BotController extends HttpServlet {
     private  Gson gson;
     private GameMoveService gameMoveService;

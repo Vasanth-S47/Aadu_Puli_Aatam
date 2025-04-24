@@ -15,7 +15,7 @@ import com.game.service.GameLogService;
 import com.game.utils.MessageUtil;
 import com.google.gson.Gson;
 
-@WebServlet("/api/analytics/game/*")
+@WebServlet("/api/analytics/game")
 public class GameAnalyticsController extends HttpServlet {
 
     private GameLogService gameLogService;

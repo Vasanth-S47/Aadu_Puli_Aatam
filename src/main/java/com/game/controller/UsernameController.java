@@ -11,7 +11,7 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/username/*")
+@WebServlet("/api/username")
 public class UsernameController extends HttpServlet {
     private  Gson gson;
     private UserService userService;

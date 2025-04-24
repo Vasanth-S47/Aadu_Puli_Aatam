@@ -1,4 +1,5 @@
 package com.game.database;
+import com.game.utils.MessageUtil;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.io.IOException;
@@ -13,13 +14,14 @@ public class DatabaseConnection {
     static {
         try (InputStream input = DatabaseConnection.class.getClassLoader().getResourceAsStream("db.properties")) {
             if (input == null) {
-                throw new RuntimeException("Unable to find db.properties in classpath");
+                throw new RuntimeException(MessageUtil.get("db.properties.not.found"));
             }
 
             Properties properties = new Properties();
             properties.load(input);
 
             HikariConfig config = new HikariConfig();
+
             config.setJdbcUrl(properties.getProperty("db.url"));
             config.setUsername(properties.getProperty("db.username"));
             config.setPassword(properties.getProperty("db.password"));
@@ -29,9 +31,10 @@ public class DatabaseConnection {
             config.setIdleTimeout(Long.parseLong(properties.getProperty("db.idleTimeout")));
             config.setMaxLifetime(Long.parseLong(properties.getProperty("db.maxLifetime")));
             config.setConnectionTimeout(Long.parseLong(properties.getProperty("db.connectionTimeout")));
+
             dataSource = new HikariDataSource(config);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load database properties", e);
+            throw new RuntimeException(MessageUtil.get("db.properties.not.load"));
         }
     }
 

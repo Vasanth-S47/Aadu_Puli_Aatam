@@ -1,41 +1,70 @@
-package com.game.servlet;
+package com.game.controller;
 
 import com.game.dao.UserDAO;
-import com.game.model.User;
+import com.game.exception.InvalidCredentialsException;
+import com.game.exception.InvalidInputException;
+import com.game.service.UserService;
+import com.game.utils.MessageUtil;
+import com.google.gson.Gson;
 import org.mindrot.jbcrypt.BCrypt;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
+import javax.servlet.ServletException;
 import java.io.IOException;
-import java.sql.SQLException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
 
-@WebServlet("/login")
+@WebServlet("/auth/login")
 public class UserLoginController extends HttpServlet {
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private UserService userService;
+    private  Gson gson ;
+
+    public void init() throws ServletException {
+        super.init();
+        userService = UserService.getInstance();
+        gson = new Gson();
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
+        PrintWriter responseWriter = response.getWriter();
 
-        UserDAO userDAO = new UserDAO();
-        try {
-            User user = userDAO.getUserByEmail(email);
+       try {
+            Integer userId = userService.login(email, password);
 
-            if (user != null && BCrypt.checkpw(password, user.getPassword())) {
-                String token = BCrypt.hashpw(String.valueOf(user.getId()), BCrypt.gensalt(12));
+            if(userId != null){
 
-                Cookie loginCookie = new Cookie("user_token", token);
+                Map<String, Integer> userIdMap = new HashMap<>();
+                userIdMap.put("userId",userId);
+                String loginToken= generateToken(userId);
+                Cookie loginCookie = new Cookie("user_token", loginToken);
                 loginCookie.setHttpOnly(true);
                 loginCookie.setMaxAge(7 * 24 * 60 * 60);
-                loginCookie.setPath("/");
+                loginCookie.setPath("/Aadu_Puli_Aatam");
                 response.addCookie(loginCookie);
+                UserDAO.getInstance().updateTokenByEmail(email,loginToken);
 
                 response.setStatus(HttpServletResponse.SC_OK);
-            } else {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // wrong credentials
+                responseWriter.print(gson.toJson(userIdMap));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (InvalidInputException | InvalidCredentialsException e)
+       {
+           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+           responseWriter.print(gson.toJson(e.getMessage()));
+       }
+       catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            responseWriter.print(gson.toJson(MessageUtil.get("error.server.internal")));
+
         }
+    }
+    private String generateToken(int userId) {
+        return BCrypt.hashpw(String.valueOf(userId), BCrypt.gensalt(12));
     }
 }

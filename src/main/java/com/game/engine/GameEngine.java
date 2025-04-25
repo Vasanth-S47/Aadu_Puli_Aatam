@@ -8,11 +8,24 @@ import java.util.List;
 import java.util.Map;
 
 public class GameEngine {
-
+    private static volatile GameEngine instance;
+    private GameEngine() {
+    }
+    public static GameEngine getInstance() {
+        if (instance == null) {
+            synchronized (GameEngine.class) {
+                if (instance == null) {
+                    instance = new GameEngine();
+                }
+            }
+        }
+        return instance;
+    }
     private static final int BOARD_SIZE = 24;
     private static final int EMPTY = 0;
     private static final int TIGER = 1;
     private static final int GOAT = 2;
+
 
     private final GameConstant gameConstant=GameConstant.getInstance();
 
